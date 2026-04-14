@@ -40,6 +40,10 @@ comandos = {
     "estudos":{
         "palavras":["estudo","estudos"],
         "funcao": estudos
+    },
+    "time":{
+        "palavras":["taime","time","taimi"],
+        "funcao": Timer
     }
 }
 while True:

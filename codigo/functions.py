@@ -1,9 +1,10 @@
 import speech_recognition as recon
 from piper import PiperVoice #classe que controla a voz
 import numpy as np # mais low level para converter bytes
+import threading
 import datetime
 import subprocess
-from time import sleep
+import time
 import os
 
 BASE_DIR = os.path.dirname(__file__)
@@ -14,18 +15,9 @@ voice = PiperVoice.load(MODEL_PATH)
 
 micro = recon.Recognizer()
 
+espera_de_fala = threading.Lock()
+
 # captura de audio
-def escutar(max_tentativas=3):
-    for _ in range(max_tentativas):
-        comando = normalizar(capture_audio())
-
-        if comando:
-            return comando.lower().strip()
-
-        fala("Não entendi, pode repetir?")
-
-    fala("Não consegui ouvir você.")
-    return None
 
 def capture_audio():
     # inicia a escuta
@@ -46,20 +38,34 @@ def capture_audio():
             print(f"Erro interno {e}")
             return None
 
+def escutar(max_tentativas=3):
+    for _ in range(max_tentativas):
+        comando = normalizar(capture_audio())
+
+        if comando:
+            return comando.lower().strip()
+
+        fala("Não entendi, pode repetir?")
+
+    fala("Não consegui ouvir você.")
+    return None
+
 def normalizar(texto):
     if not texto:
         return None
     return texto.lower().strip().lstrip(".")
+
 # converte o texto para fala
 def fala(texto):
-    som = subprocess.Popen(["aplay", "-f", "S16_LE", "-r", "22050", "-c", "1"], stdin=subprocess.PIPE)
-    for pedaco in voice.synthesize(texto):
-        # converte float → int16 → bytes
-        audio = (pedaco.audio_float_array * 32767).astype(np.int16)
-        som.stdin.write(audio.tobytes())
+    with espera_de_fala:
+        som = subprocess.Popen(["aplay", "-f", "S16_LE", "-r", "22050", "-c", "1"], stdin=subprocess.PIPE)
+        for pedaco in voice.synthesize(texto):
+            # converte float → int16 → bytes
+            audio = (pedaco.audio_float_array * 32767).astype(np.int16)
+            som.stdin.write(audio.tobytes())
 
-    som.stdin.close()
-    som.wait()
+        som.stdin.close()
+        som.wait()
 
 def Saudacao():
     horario = datetime.datetime.now().hour
@@ -99,7 +105,7 @@ def data():
     fala(f"hoje é dia {dia} de {mes} de {ano}")
 
 def abrirYoutube():
-    fala("Claro,Me fale, o que voçê voce deseja pesquisar no youtube?")
+    fala("Claro,Me fale, o que você deseja pesquisar no youtube?")
     query = escutar()
     if not query:
         return
@@ -145,7 +151,7 @@ def desligar():
 
     if escolha in ["sim", "s", "claro", "pode", "ok","desligar","pode desligar","confirmo","comfirmo"]:
         fala("Entendido, desligando em 3 segundos")
-        sleep(3)
+        time.sleep(3)
         subprocess.run(["systemctl", "poweroff"])
 
 def terminal():
@@ -161,7 +167,39 @@ def estudos():
     print("ATIVANDO MODO ESTUDOS!")
     fala("Entendido, ativando o modo estudo agora !")
     subprocess.Popen(["brave-browser",f"https://youtube.com/results?search_query=blues"])
-    sleep(2)
+    time.sleep(2)
     subprocess.Popen(["brave-browser", 'https://app.hackingclub.com/dashboard'])
-    sleep(2)
+    time.sleep(2)
     subprocess.Popen("konsole")
+
+
+def Timer():
+    def extrair_segundos(texto):
+        texto = texto.lower()
+
+        if "segundo" in texto:
+            numero = ''.join(filter(str.isdigit, texto))
+            return int(numero) if numero else None
+
+        if "minuto" in texto:
+            numero = ''.join(filter(str.isdigit, texto))
+            return (int(numero) * 60) if numero else None
+
+        return None
+
+    def contar_timer(seg):
+        if seg > 60:
+            fala(f"Ok, Iniciando contagem de {seg} minutos conforme você pediu, avisarei assim que terminar..")
+        else:
+            fala(f"Ok, Iniciando contagem de {seg} segundos conforme você pediu, avisarei assim que terminar..")
+        time.sleep(seg)
+        fala("retrô o taime que você pediu acabou de expirar")
+        print(f"Time expirado !!")
+    texto = escutar()
+    if not texto:
+        fala("Não entendi retrô")
+    seg = extrair_segundos(texto)
+    if not seg:
+        fala("Não consegui entender a tempo, desculpe")
+        return
+    threading.Thread(target=contar_timer, args=(seg,)).start()
