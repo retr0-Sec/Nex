@@ -1,4 +1,4 @@
-# 👻 Ghost - Voice Assistant Project
+# 👻 Nex - Voice Assistant Project
 
 Projeto de assistente de voz desenvolvido em Python, com foco em automação, reconhecimento de voz e síntese de fala.
 
@@ -6,7 +6,7 @@ Projeto de assistente de voz desenvolvido em Python, com foco em automação, re
 
 ## 🚀 Sobre o projeto
 
-O **Ghost** é um assistente de voz local que utiliza reconhecimento de fala e resposta por áudio para executar comandos e automações no sistema.
+O **Nex** é um assistente de voz local que utiliza reconhecimento de fala e resposta por áudio para executar comandos e automações no sistema.
 
 O objetivo é criar uma base extensível para:
 - automação de tarefas
