@@ -32,7 +32,7 @@ O objetivo é criar uma base extensível para:
 ### 1. Clone o repositório
 ```bash
 git clone https://github.com/retr0-Sec/ghost.git
-cd ghost
+cd GHOST
 ```
 ### 2 Instale o poetry (Caso não tenha)
 ```bash
